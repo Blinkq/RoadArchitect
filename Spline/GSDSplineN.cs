@@ -11,6 +11,7 @@ public class GSDSplineN : MonoBehaviour{
 	
 	public Vector3 pos;
 	public Quaternion rot;
+	public float slipAngle = 0;
 	public Vector3 tangent;
 	public Vector2 EaseIO;
 	public float tDist = 0f;

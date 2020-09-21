@@ -450,7 +450,7 @@ public class GSDRoadEditor : Editor {
 		
 		//Option: Terrain subtraction:
 		EditorGUILayout.BeginHorizontal();
-		t_opt_TerrainSubtract_Match.floatValue = EditorGUILayout.Slider("Terrain subtraction: ",RS.opt_TerrainSubtract_Match,0.01f,1f);
+		t_opt_TerrainSubtract_Match.floatValue = EditorGUILayout.Slider("Terrain subtraction: ",RS.opt_TerrainSubtract_Match,0.0f,0.02f);
 		if(GUILayout.Button(btnRefreshText,GSDImageButton,GUILayout.Width(16f))){
 			t_opt_TerrainSubtract_Match.floatValue = 0.01f;
 		}

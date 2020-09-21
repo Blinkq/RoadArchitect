@@ -188,14 +188,12 @@ namespace GSD.Threaded{
 			List<int[]> tXYs = new List<int[]>();
 			float TreeClearDist = tSpline.tRoad.opt_ClearTreesDistance;
 			if(TreeClearDist < tSpline.tRoad.RoadWidth()){ TreeClearDist = tSpline.tRoad.RoadWidth(); }
-			GSD.Roads.GSDRoadUtil.Construction2DRect tRect = null;
 			float tGrade = 0f;
 			for(float i=StartMin;i<FinalMax;i+=tStep){
 				if(tSpline.tRoad.opt_HeightModEnabled){
 					if(i > 1f){ break; }
 					tNext = i+tStep;
 					if(tNext > 1f){ break; }
-	
 					tSpline.GetSplineValue_Both(i,out tVect1,out POS1);
 	
 					if(tNext <= 1f){
@@ -315,12 +313,7 @@ namespace GSD.Threaded{
 					if(fValue2 > 1){ fValue2 = 1; }
 
 					tXYs.Add(CreateTris(fValue1,fValue2,ref tVect1,ref POS1,ref tVect2,ref POS2,Sep,ref TBMList,ref T1SUB, ref T2SUB, ref TTD, HeightSep));
-					
-					//Details and trees:
-					tRect = SetDetailCoords(i,ref tVect1,ref POS1,ref tVect2, ref POS2,tSpline.tRoad.opt_ClearDetailsDistance,TreeClearDist, ref TTD, ref tSpline);
-					if(tSpline.tRoad.opt_TreeModEnabled && tRect != null){
-						TreerectList.Add(tRect);
-					}
+
 				}else{
 					if(i > 1f){ break; }
 					tNext = i+tStep;
@@ -332,12 +325,6 @@ namespace GSD.Threaded{
 						tSpline.GetSplineValue_Both(tNext,out tVect2,out POS2);
 					}else{
 						tSpline.GetSplineValue_Both(1f,out tVect2,out POS2);
-					}
-					
-					//Details and trees:
-					tRect = SetDetailCoords(i,ref tVect1,ref POS1,ref tVect2, ref POS2,tSpline.tRoad.opt_ClearDetailsDistance,TreeClearDist, ref TTD, ref tSpline);
-					if(tSpline.tRoad.opt_TreeModEnabled && tRect != null){
-						TreerectList.Add(tRect);
 					}
 				}
 			}
@@ -468,11 +455,14 @@ namespace GSD.Threaded{
 			Vector3 lVect2 = (tVect2 + new Vector3(Sep*-POS2.normalized.z,0,Sep*POS2.normalized.x));
 			Vector3 rVect2 = (tVect2 + new Vector3(Sep*POS2.normalized.z,0,Sep*-POS2.normalized.x));
 			
-			lVect1.y = T1SUB;
-			rVect1.y = T1SUB;
-			lVect2.y = T2SUB;
-			rVect2.y = T2SUB;
+			lVect1.y = T1SUB+POS1.y;
+			rVect1.y = T1SUB-POS1.y;
+			lVect2.y = T2SUB+POS2.y;
+			rVect2.y = T2SUB-POS2.y;
 			
+			Vector3 dir1 = lVect1 - rVect1; 
+			Vector3 dir2 = lVect2 - rVect2; 
+
 			TerrainBoundsMaker TBM = new TerrainBoundsMaker();
 			TBM.triList = new List<GSD.Roads.GSDRoadUtil.Construction3DTri>();
 			
@@ -484,10 +474,10 @@ namespace GSD.Threaded{
 			Vector3 lVect2far = (tVect2 + new Vector3(HeightSep*-POS2.normalized.z,0,HeightSep*POS2.normalized.x));
 			Vector3 rVect2far = (tVect2 + new Vector3(HeightSep*POS2.normalized.z,0,HeightSep*-POS2.normalized.x));
 			
-			lVect1far.y = lVect1.y;
-			lVect2far.y = lVect2.y;
-			rVect1far.y = rVect1.y;
-			rVect2far.y = rVect2.y;
+			lVect1far.y = T1SUB+dir1.normalized.y*HeightSep;
+			lVect2far.y = T2SUB+dir2.normalized.y*HeightSep;
+			rVect1far.y = T1SUB-dir1.normalized.y*HeightSep;
+			rVect2far.y = T2SUB-dir2.normalized.y*HeightSep;
 
 			TBM.triList.Add(new GSD.Roads.GSDRoadUtil.Construction3DTri(lVect1far,lVect1,lVect2far,i,i2));
 			TBM.triList.Add(new GSD.Roads.GSDRoadUtil.Construction3DTri(lVect2far,lVect1,lVect2,i,i2));
@@ -1195,7 +1185,9 @@ namespace GSD.Threaded{
 						cNode.bInitialRoadHeight = tRoad.RCS.RoadVectors[tRoad.RCS.RoadVectors.Count-1].y;
 					}
 				}
+
 				NodeIDPrev = NodeID;				//Store the previous node ID for the next round. Done now with road cuts as far as this function is concerned.
+				
 				
 				//Set all necessary intersection triggers to false:
 				bInter_CurreIsCorner = false;
@@ -1340,6 +1332,7 @@ namespace GSD.Threaded{
 					RampOuterWidthL = (OuterShoulderWidthL / 4f) + OuterShoulderWidthL;
 				}
 				
+
 				//The master outer road edges vector locations:
 				if(bMaxIntersection && bInterseOn){	//If in maximum intersection, adjust road edge (also the shoulder inner edges):
 					if(GSDRI.rType == GSDRoadIntersection.RoadTypeEnum.NoTurnLane){
@@ -1362,8 +1355,8 @@ namespace GSD.Threaded{
 					}
 				}else{
 					//Typical road/shoulder inner edge location:
-					rVect = (tVect + new Vector3(RoadSeperation*POS.normalized.z,0,RoadSeperation*-POS.normalized.x));
-					lVect = (tVect + new Vector3(RoadSeperation*-POS.normalized.z,0,RoadSeperation*POS.normalized.x));
+					rVect = (tVect + new Vector3(RoadSeperation*POS.normalized.z,-POS.y,RoadSeperation*-POS.normalized.x));
+					lVect = (tVect + new Vector3(RoadSeperation*-POS.normalized.z,POS.y,RoadSeperation*POS.normalized.x));
 				}
 				
 				//Shoulder right vectors:
@@ -5322,11 +5315,10 @@ namespace GSD.Threaded{
 			
 			int cCount = RCS.cut_RoadVectors.Count;
 			float tDistance= 0f;
-			float tDistanceLeft = 0f;
-			float tDistanceRight = 0f;
-			float tDistanceLeftSum = 0f;
-			float tDistanceRightSum = 0f;
+			float tDistanceWorld= 0f;
 			float tDistanceSum = 0f;
+			float tDistanceSumWorld = 0f;
+
 			for(int j=0;j<cCount;j++){
 				Vector3[] tVerts = RCS.cut_RoadVectors[j].ToArray();
 				int MVL = tVerts.Length;
@@ -5336,22 +5328,36 @@ namespace GSD.Threaded{
 				bool bOddToggle = true;
 				while(i+6 < MVL){
 					tDistance = Vector3.Distance(tVerts[i],tVerts[i+4]);
-					tDistance = tDistance / 5f;
+					tDistanceWorld = Vector3.Distance(tVerts[i],tVerts[i+4]);
+
+					tDistance = tDistance * 0.2f;
+					tDistanceWorld = tDistanceWorld * 0.2f; // CONTROLL  MAIN ROAD UV HERE
+
 					uv[i] = new Vector2(0f, tDistanceSum);
 					uv[i+2] = new Vector2(1f, tDistanceSum);
 					uv[i+4] = new Vector2(0f, tDistance+tDistanceSum);
 					uv[i+6] = new Vector2(1f, tDistance+tDistanceSum);	
-					
+
+					uv_world[i] = new Vector2(0f, tDistanceSumWorld);
+					uv_world[i+2] = new Vector2(1f, tDistanceSumWorld);
+					uv_world[i+4] = new Vector2(0f, tDistanceWorld+tDistanceSumWorld);
+					uv_world[i+6] = new Vector2(1f, tDistanceWorld+tDistanceSumWorld);	
 					//Last segment needs adjusted due to double vertices:
 					if((i+7) == MVL){
 						if(bOddToggle){
 							//First set: Debug.Log ("+5:"+i+" "+(i+2)+" "+(i+4)+" "+(i+6));		
 							uv[MVL-3] = uv[i+4];
 							uv[MVL-1] = uv[i+6];
+
+							uv_world[MVL-3] = uv_world[i+4];
+							uv_world[MVL-1] = uv_world[i+6];
 						}else{
 							//Last set: Debug.Log ("+3:"+i+" "+(i+2)+" "+(i+4)+" "+(i+6));	
 							uv[MVL-4] = uv[i+4];
 							uv[MVL-2] = uv[i+6];
+
+							uv_world[MVL-4] = uv_world[i+4];
+							uv_world[MVL-2] = uv_world[i+6];
 						}
 					}
 					
@@ -5361,14 +5367,12 @@ namespace GSD.Threaded{
 						i+=3;
 					}
 					
-					tDistanceLeftSum+=tDistanceLeft;
-					tDistanceRightSum+=tDistanceRight;
 					tDistanceSum+=tDistance;
+					tDistanceSumWorld+=tDistanceWorld;
+
 					bOddToggle = !bOddToggle;
 				}
-				for(i=0;i<MVL;i++){
-					uv_world[i] = new Vector2(tVerts[i].x*0.2f,tVerts[i].z*0.2f);
-				}
+
 				RCS.cut_uv_world.Add(uv_world);
 				RCS.cut_uv.Add(uv);
 			}
@@ -5963,75 +5967,43 @@ namespace GSD.Threaded{
 			//Finally, adding texture coordinates to the mesh will enable it to display a material correctly. 
 			//Assuming we want to show the whole image across the plane, the UV values will all be 0 or 1, corresponding to the corners of the texture. 
 			//int MVL = tMesh.vertices.Length;
+			
 			int MVL = tVerts.Length;
 			Vector2[] uv = new Vector2[MVL];
 			int i=0;
-//			bool bOddToggle = true;
-//			float tDistance= 0f;
-//			float tDistanceLeft = 0f;
-//			float tDistanceRight = 0f;
-//			float tDistanceLeftSum = 0f;
-//			float tDistanceRightSum = 0f;
-//			float tDistanceSum = 0f;
-//			float DistRepresent = 5f;
+			bool bOddToggle = true;
+			float tDistance= 0f;
+			float tDistanceSum = 0f;
 
-//			float mDistanceL = Vector3.Distance(tVerts[i],tVerts[tVerts.Length-3]);
-//			float mDistanceR = Vector3.Distance(tVerts[i+2],tVerts[tVerts.Length-1]);
-			
-			for(i=0;i<MVL;i++){
-				uv[i] = new Vector2(tVerts[i].x*0.2f, tVerts[i].z*0.2f);
+			while(i+6 < MVL){
+				tDistance = Vector3.Distance(tVerts[i],tVerts[i+4]);
+				tDistance = tDistance *0.1f;
+				uv[i] = new Vector2(0f, tDistanceSum);
+				uv[i+2] = new Vector2(1f, tDistanceSum);
+				uv[i+4] = new Vector2(0f, tDistance+tDistanceSum);
+				uv[i+6] = new Vector2(1f, tDistance+tDistanceSum);	
+				
+				if((i+7) == MVL){
+					if(bOddToggle){
+						uv[MVL-3] = uv[i+4];
+						uv[MVL-1] = uv[i+6];
+					}else{
+						uv[MVL-4] = uv[i+4];
+						uv[MVL-2] = uv[i+6];
+					}
+				}
+				
+				if(bOddToggle){
+					i+=5;	
+				}else{
+					i+=3;
+				}
+				
+				tDistanceSum+=tDistance;
+				bOddToggle = !bOddToggle;
 			}
-			return uv;
 			
-//			while(i+6 < MVL){
-//				tDistanceLeft = Vector3.Distance(tVerts[i],tVerts[i+4]);
-//				tDistanceRight = Vector3.Distance(tVerts[i+2],tVerts[i+6]);
-//				
-//				tDistanceLeft = tDistanceLeft / 5f;
-//				tDistanceRight = tDistanceRight / 5f;
-//				
-////				if(i==0){
-////					uv[i] = new Vector2(0.25f, tDistanceLeftSum);
-////					uv[i+2] = new Vector2(1.25f, tDistanceRightSum);
-////					uv[i+4] = new Vector2(0f, tDistanceLeft+tDistanceLeftSum);
-////					uv[i+6] = new Vector2(2f, tDistanceRight+tDistanceRightSum);
-////				}else{
-////					uv[i] = new Vector2(0f, tDistanceLeftSum);
-////					uv[i+2] = new Vector2(2f, tDistanceRightSum);
-////					uv[i+4] = new Vector2(0f, tDistanceLeft+tDistanceLeftSum);
-////					uv[i+6] = new Vector2(2f, tDistanceRight+tDistanceRightSum);
-////				}
-//				
-//				uv[i] = new Vector2(tVerts[i].x/5f, tVerts[i].z/5f);
-//				uv[i+2] = new Vector2(tVerts[i+2].x/5f, tVerts[i+2].z/5f);
-//				uv[i+4] = new Vector2(tVerts[i+4].x/5f, tVerts[i+4].z/5f);
-//				uv[i+6] = new Vector2(tVerts[i+6].x/5f, tVerts[i+6].z/5f);
-//
-//				//Last segment needs adjusted due to double vertices:
-//				if((i+7) == MVL){
-//					if(bOddToggle){
-//						//First set: Debug.Log ("+5:"+i+" "+(i+2)+" "+(i+4)+" "+(i+6));		
-//						uv[MVL-3] = uv[i+4];
-//						uv[MVL-1] = uv[i+6];
-//					}else{
-//						//Last set: Debug.Log ("+3:"+i+" "+(i+2)+" "+(i+4)+" "+(i+6));	
-//						uv[MVL-4] = uv[i+4];
-//						uv[MVL-2] = uv[i+6];
-//					}
-//				}
-//				
-//				if(bOddToggle){
-//					i+=5;	
-//				}else{
-//					i+=3;
-//				}
-//				
-//				tDistanceLeftSum+=tDistanceLeft;
-//				tDistanceRightSum+=tDistanceRight;
-//				//tDistanceSum+=tDistance;
-//				bOddToggle = !bOddToggle;
-//			}
-//			return uv;
+			return uv;
 		}
 		
 		private static Vector2[] ProcessRoad_UVs_Intersection_MainPlate2(ref GSD.Roads.RoadConstructorBufferMaker RCS, Vector3[] tVerts, GSDRoadIntersection GSDRI){

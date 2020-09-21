@@ -563,7 +563,7 @@ public class GSDSplineNEditor : Editor {
 			tNode.AddEdgeObject();
 		}
 		EditorGUILayout.EndHorizontal();
-		
+		GUILayout.Space(4f);
 		if(tNode.SplinatedObjects.Count > 20 || tNode.EdgeObjects.Count > 20){
 			EditorGUILayout.BeginHorizontal();
 			EditorGUILayout.LabelField("");
@@ -578,6 +578,18 @@ public class GSDSplineNEditor : Editor {
 			
 			EditorGUILayout.EndHorizontal();
 		}
+		GUILayout.Space(4f);
+		EditorGUILayout.BeginHorizontal();
+		EditorGUILayout.LabelField("");
+		if(GUILayout.Button("Terrain Height", EditorStyles.miniButton)){
+			float h = Terrain.activeTerrain.SampleHeight(tNode.pos);
+			tNode.transform.position = new Vector3(tNode.pos.x, h, tNode.pos.z);
+		}
+		EditorGUILayout.EndHorizontal();
+		GUILayout.Space(4f);
+		EditorGUILayout.BeginHorizontal();
+		tNode.slipAngle = EditorGUILayout.Slider("Road Z Angle:",tNode.slipAngle,0f,1f);
+		EditorGUILayout.EndHorizontal();
 		Line();	
 	}
 	
@@ -1055,7 +1067,7 @@ public class GSDSplineNEditor : Editor {
 					}
 										
 					SMM.Setup(true);
-//					Debug.Log ("Setup SMM");
+					Debug.Log ("Setup SMM");
 				}
 			}
 		}
@@ -1173,7 +1185,7 @@ public class GSDSplineNEditor : Editor {
 				EOM.EM.EdgeMaterial2 = null;
 			}
 
-			if(!EOM.bEdgeSignLabelInit){
+			if(!EOM.bEdgeSignLabelInit && EOM.EM.EdgeObject != null){
 				EOM.bEdgeSignLabel = false;
 				if(string.CompareOrdinal(EOM.EM.EdgeObject.name,"GSDSignDiamond") == 0){
 					EOM.bEdgeSignLabel = true;
@@ -1826,6 +1838,7 @@ public class GSDSplineNEditor : Editor {
 	}
 	
 	void EnforceCurve(ref AnimationCurve tCurve){
+		if ( tCurve == null) tCurve = new AnimationCurve();
 		if(tCurve.keys.Length == 0){
 			tCurve.AddKey(0f,1f);
 			tCurve.AddKey(1f,1f);

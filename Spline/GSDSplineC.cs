@@ -676,7 +676,7 @@ public class GSDSplineC : MonoBehaviour{
 		if(f < 0f){ f = 0f; }
 		if(f > 1f){ f = 1f; }
 
-        if (mCount == 0) { 
+        if (mCount == 0) {
             tVect1 = default(Vector3);
             tVect2 = default(Vector3);
             return;
@@ -717,7 +717,6 @@ public class GSDSplineC : MonoBehaviour{
 
 		float param = (f - mNodes[idx].tTime) / (mNodes[idx + 1].tTime - mNodes[idx].tTime);
 		param = GSDRootUtil.Ease(param, mNodes[idx].EaseIO.x, mNodes[idx].EaseIO.y);
-		
 		tVect1 = GetHermiteInternal(idx, param, false);
 		tVect2 = GetHermiteInternal(idx, param, true);
 	}
@@ -906,7 +905,6 @@ public class GSDSplineC : MonoBehaviour{
 	private Vector3 GetHermiteInternal(int i, double t, bool bTangent = false){
 		double t2,t3;
 		float BL0,BL1,BL2,BL3,tension;
-		
 		if(!bTangent){
 			t2 = t * t;
 			t3 = t2 * t;
@@ -926,8 +924,6 @@ public class GSDSplineC : MonoBehaviour{
 		//Tension:
 		tension = 0.5f;
 		
-		
-		
 		//Tangents:
 		Vector3 xVect1 = (P1-P2) * tension;
 		Vector3 xVect2 = (P3-P0) * tension;
@@ -941,7 +937,6 @@ public class GSDSplineC : MonoBehaviour{
 			if(xVect2.magnitude > tMaxMag){ xVect2 = Vector3.ClampMagnitude(xVect2,tMaxMag); }
 		}
 		
-
 		if(!bTangent){
 			BL0 = (float) (CM[ 0] * t3 + CM[ 1] * t2 + CM[ 2] * t + CM[ 3]);
 			BL1 = (float) (CM[ 4] * t3 + CM[ 5] * t2 + CM[ 6] * t + CM[ 7]);
@@ -956,7 +951,28 @@ public class GSDSplineC : MonoBehaviour{
 		
 		Vector3 tVect = BL0 * P0 + BL1 * P1 + BL2 * xVect1 + BL3 * xVect2;
 
-		if(!bTangent){ if(tVect.y < 0f){ tVect.y = 0f; } }
+		if(!bTangent){
+			if(tVect.y < 0f){
+				tVect.y = 0f; 
+			} 
+		} else {
+			if( i + 1 < mNodes.Count ){
+				float angleFactor = ((float)t/2f - 0.5f) * 2f;
+				float currentAngle = mNodes[i].slipAngle;
+				float nextAngle = mNodes[i+1].slipAngle;
+				float finalAngle = 0;
+					if( angleFactor <= 0 ){
+					finalAngle = -angleFactor * currentAngle;
+				} else {
+					finalAngle = angleFactor * nextAngle;
+				}
+				tVect.y = finalAngle; 
+
+			} else {
+				tVect.y = 0; 
+			}
+		}
+		
 		
 		return tVect;
 	}

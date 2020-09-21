@@ -353,8 +353,8 @@ namespace GSD.Roads{
 				if(bContains && !TempTerrainDict.ContainsKey(tTerrain)){
 					TTD = new TempTerrainData();
 					TTD.HM = tTerrain.terrainData.heightmapResolution;			
-					TTD.HMHeight = tTerrain.terrainData.heightmapHeight;
-					TTD.heights = tTerrain.terrainData.GetHeights(0,0,tTerrain.terrainData.heightmapWidth,tTerrain.terrainData.heightmapHeight);
+					TTD.HMHeight = tTerrain.terrainData.heightmapResolution;
+					TTD.heights = tTerrain.terrainData.GetHeights(0,0,tTerrain.terrainData.heightmapResolution,tTerrain.terrainData.heightmapResolution);
 					TTD.HMRatio = TTD.HM / tTerrain.terrainData.size.x;
 					TTD.MetersPerHM = tTerrain.terrainData.size.x / tTerrain.terrainData.heightmapResolution;
 					float DetailRatio = tTerrain.terrainData.detailResolution / tTerrain.terrainData.size.x;
@@ -374,7 +374,7 @@ namespace GSD.Roads{
 						TTD.TerrainMaxIndex = tTerrain.terrainData.heightmapResolution;
 						TTD.TerrainSize = tTerrain.terrainData.size;
 						TTD.TerrainPos = tTerrain.transform.position;
-						TTD.tHeights = new bool[tTerrain.terrainData.heightmapWidth,tTerrain.terrainData.heightmapHeight];
+						TTD.tHeights = new bool[tTerrain.terrainData.heightmapResolution,tTerrain.terrainData.heightmapResolution];
 						TID = tTerrain.transform.gameObject.GetComponent<GSDTerrain>();
 						if(TID != null){
 							TTD.GSDID = TID.GSDID;
@@ -643,7 +643,7 @@ namespace GSD.Roads{
 					
 				//Heights:
 				if(TH.x1 != null){
-					heights = tTerrain.terrainData.GetHeights(0,0,tTerrain.terrainData.heightmapWidth,tTerrain.terrainData.heightmapHeight);
+					heights = tTerrain.terrainData.GetHeights(0,0,tTerrain.terrainData.heightmapResolution,tTerrain.terrainData.heightmapResolution);
 					ArrayCount = TH.cI;
 					for(int i=0;i<ArrayCount;i++){
 						heights[TH.x1[i],TH.y1[i]] = TH.h[i];
@@ -1700,7 +1700,7 @@ namespace GSD.Roads{
 						CreatedMainObj = null;
 						MeshMainBuffer = tMesh_RoadCuts_world[i];
 						if(MeshMainBuffer != null){
-							MeshSetup2_Helper_RoadCuts(i,ref MeshMainBuffer, cut_uv_world[i], cut_tangents_world[i], ref tRoad.MeshRoad,false, out CreatedMainObj);
+							MeshSetup2_Helper_RoadCuts(i,ref MeshMainBuffer, cut_uv_world[i], cut_tangents[i], ref tRoad.MeshRoad,false, out CreatedMainObj);
 							SaveMesh(SaveMeshTypeEnum.RoadCut,MeshMainBuffer,tRoad,"RoadCut" + i.ToString());
 						}
 						
@@ -1758,7 +1758,7 @@ namespace GSD.Roads{
 							CreatedMainObj = null;
 							MeshMainBuffer = tMesh_SRCuts_world[i];
 							if(MeshMainBuffer != null){
-								MeshSetup2_Helper_CutsShoulder(i,ref MeshMainBuffer, cut_uv_SR_world[i], cut_tangents_SR_world[i], ref tRoad.MeshShoR,false,false,out CreatedMainObj);
+								MeshSetup2_Helper_CutsShoulder(i,ref MeshMainBuffer, cut_uv_SR[i], cut_tangents_SR[i], ref tRoad.MeshShoR,false,false,out CreatedMainObj);
 								SaveMesh(SaveMeshTypeEnum.SCut,MeshMainBuffer,tRoad,"SCutR" + i.ToString());
 							}
 	
@@ -1782,7 +1782,7 @@ namespace GSD.Roads{
 							CreatedMainObj = null;
 							MeshMainBuffer = tMesh_SLCuts_world[i];
 							if(MeshMainBuffer != null){
-								MeshSetup2_Helper_CutsShoulder(i,ref MeshMainBuffer, cut_uv_SL_world[i], cut_tangents_SL_world[i], ref tRoad.MeshShoL,true,false,out CreatedMainObj);
+								MeshSetup2_Helper_CutsShoulder(i,ref MeshMainBuffer, cut_uv_SL[i], cut_tangents_SL[i], ref tRoad.MeshShoL,true,false,out CreatedMainObj);
 								SaveMesh(SaveMeshTypeEnum.SCut,MeshMainBuffer,tRoad,"SCutL" + i.ToString());
 							}
 							
@@ -2364,7 +2364,7 @@ namespace GSD.Roads{
 					MF.sharedMesh = vMesh;
 					tCenter.transform.parent = tNode.GSDRI.transform;
                     if (tRoad.opt_bIsLightmapped) {
-                        UnityEditor.GameObjectUtility.SetStaticEditorFlags(tCenter, UnityEditor.StaticEditorFlags.LightmapStatic);
+                        UnityEditor.GameObjectUtility.SetStaticEditorFlags(tCenter, UnityEditor.StaticEditorFlags.ContributeGI);
                     }
                     if (tRoad.opt_bIsStatic) {
                         tCenter.isStatic = true;
@@ -2394,7 +2394,7 @@ namespace GSD.Roads{
                     //					}
                     tMarker.transform.parent = tNode.GSDRI.transform;
                     if (tRoad.opt_bIsLightmapped) {
-                        UnityEditor.GameObjectUtility.SetStaticEditorFlags(tMarker, UnityEditor.StaticEditorFlags.LightmapStatic);
+                        UnityEditor.GameObjectUtility.SetStaticEditorFlags(tMarker, UnityEditor.StaticEditorFlags.ContributeGI);
                     }
                     if (tRoad.opt_bIsStatic) {
                         tMarker.isStatic = true;
@@ -2547,7 +2547,7 @@ namespace GSD.Roads{
                 UnityEditor.Unwrapping.GenerateSecondaryUVSet(MF.sharedMesh);
             }
             if (tRoad.opt_bIsLightmapped) {
-                UnityEditor.GameObjectUtility.SetStaticEditorFlags(tObj, UnityEditor.StaticEditorFlags.LightmapStatic);
+                UnityEditor.GameObjectUtility.SetStaticEditorFlags(tObj, UnityEditor.StaticEditorFlags.ContributeGI);
             }
             if (tRoad.opt_bIsStatic) {
                 tObj.isStatic = true;
@@ -2588,7 +2588,7 @@ namespace GSD.Roads{
             MR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             GSD.Roads.GSDRoadUtilityEditor.SetRoadMaterial(tMat,MR);
             if (tRoad.opt_bIsLightmapped) {
-                UnityEditor.GameObjectUtility.SetStaticEditorFlags(tObj, UnityEditor.StaticEditorFlags.LightmapStatic);
+                UnityEditor.GameObjectUtility.SetStaticEditorFlags(tObj, UnityEditor.StaticEditorFlags.ContributeGI);
             }
             if (tRoad.opt_bIsStatic) {
                 tObj.isStatic = true;
@@ -2712,7 +2712,7 @@ namespace GSD.Roads{
 			}
 
             if (tRoad.opt_bIsLightmapped) {
-                UnityEditor.GameObjectUtility.SetStaticEditorFlags(tObj, UnityEditor.StaticEditorFlags.LightmapStatic);
+                UnityEditor.GameObjectUtility.SetStaticEditorFlags(tObj, UnityEditor.StaticEditorFlags.ContributeGI);
             }
             if (tRoad.opt_bIsStatic) {
                 tObj.isStatic = true;
@@ -2828,7 +2828,7 @@ namespace GSD.Roads{
 			CreatedObj.transform.parent = MasterObj.transform;
 			if(!bIsMarkers && MC != null){ MC.sharedMaterial = tRoad.RoadPhysicMaterial; }
             if (tRoad.opt_bIsLightmapped) {
-                UnityEditor.GameObjectUtility.SetStaticEditorFlags(CreatedObj, UnityEditor.StaticEditorFlags.LightmapStatic);
+                UnityEditor.GameObjectUtility.SetStaticEditorFlags(CreatedObj, UnityEditor.StaticEditorFlags.ContributeGI);
             }
             if (tRoad.opt_bIsStatic) {
                 CreatedObj.isStatic = true;
@@ -2964,7 +2964,7 @@ namespace GSD.Roads{
 			if(!bIsMarkers && MC != null){ MC.sharedMaterial = tRoad.ShoulderPhysicMaterial; }
 			CreatedObj.transform.parent = MasterObj.transform;
             if (tRoad.opt_bIsLightmapped) {
-                UnityEditor.GameObjectUtility.SetStaticEditorFlags(CreatedObj, UnityEditor.StaticEditorFlags.LightmapStatic);
+                UnityEditor.GameObjectUtility.SetStaticEditorFlags(CreatedObj, UnityEditor.StaticEditorFlags.ContributeGI);
             }
             if (tRoad.opt_bIsStatic) {
                 CreatedObj.isStatic = true;
@@ -3876,8 +3876,8 @@ namespace GSD.Roads{
 				tInfo = new GSD.Threaded.GSDRoadCreationT.RoadTerrainInfo();
 				tInfo.GSDID = tTerrain.transform.gameObject.GetComponent<GSDTerrain>().GSDID;
 				tInfo.tBounds = new Rect(tTerrain.transform.position.x,tTerrain.transform.position.z,tTerrain.terrainData.size.x,tTerrain.terrainData.size.z);
-				tInfo.hmWidth = tTerrain.terrainData.heightmapWidth;
-				tInfo.hmHeight = tTerrain.terrainData.heightmapHeight;
+				tInfo.hmWidth = tTerrain.terrainData.heightmapResolution;
+				tInfo.hmHeight = tTerrain.terrainData.heightmapResolution;
 				tInfo.tPos = tTerrain.transform.position;
 				tInfo.tSize = tTerrain.terrainData.size;
 				tInfo.heights = tTerrain.terrainData.GetHeights(0,0,tInfo.hmWidth,tInfo.hmHeight);
